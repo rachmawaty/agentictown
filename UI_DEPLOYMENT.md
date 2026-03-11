@@ -1,7 +1,7 @@
 # 🎨 AgenticTown UI — Deployment Complete
 
 **Status:** ✅ **LIVE**  
-**URL:** http://localhost:8001  
+**URL:** http://localhost:8000  
 **Deployed:** March 11, 2026, 04:25 UTC
 
 ---
@@ -118,7 +118,7 @@ async def root():
 
 ## 📊 Current View
 
-When you open http://localhost:8001:
+When you open http://localhost:8000:
 
 **Header Stats:**
 - ⏱ Cycle: 2
@@ -218,7 +218,7 @@ Click any facility box:
 ### Phase 3: External Deployment
 
 1. **Deploy to Your Server**
-   - Run on 159.223.203.27:8001
+   - Run on 159.223.203.27:8000
    - Update firewall rules
    - Share URL with friends
 
@@ -240,7 +240,7 @@ docker logs agentictown-server
 docker exec agentictown-server ls -la app/static/
 
 # Test API directly
-curl http://localhost:8001/status
+curl http://localhost:8000/status
 ```
 
 ### No Agents Showing
@@ -258,7 +258,7 @@ docker run --rm --network host \
 - Check browser console for errors
 - Verify `/cycle/trigger` endpoint responds:
   ```bash
-  curl -X POST http://localhost:8001/cycle/trigger
+  curl -X POST http://localhost:8000/cycle/trigger
   ```
 
 ---
@@ -293,11 +293,11 @@ agentictown/
 
 ## 🌐 Access
 
-**Local:** http://localhost:8001  
-**External (after deployment):** http://159.223.203.27:8001
+**Local:** http://localhost:8000  
+**External (after deployment):** http://159.223.203.27:8000
 
-**API Docs:** http://localhost:8001/docs  
-**Status Endpoint:** http://localhost:8001/status
+**API Docs:** http://localhost:8000/docs  
+**Status Endpoint:** http://localhost:8000/status
 
 ---
 
@@ -316,4 +316,4 @@ UI template adapted from your provided mockup with:
 **Date:** 2026-03-11 04:25 UTC  
 **Status:** Production-ready, fully functional
 
-**Try it now:** http://localhost:8001 🎉
+**Try it now:** http://localhost:8000 🎉
