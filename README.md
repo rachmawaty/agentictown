@@ -132,12 +132,12 @@ python -m app.main
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Server runs at: **http://localhost:8000**
+Server runs at: **http://localhost:9000**
 
 ### 5. Check Status
 
 ```bash
-curl http://localhost:8000/status
+curl http://localhost:9000/status
 ```
 
 Expected output:
@@ -167,7 +167,7 @@ POST /agents/register
 {
   "name": "Sage",
   "role": "researcher",
-  "mcp_endpoint": "https://your-server.com:8000/mcp",
+  "mcp_endpoint": "https://your-server.com:9000/mcp",
   "mcp_token": "optional-auth-token",
   "personality_prompt": "You are Sage, a curious researcher...",
   "starting_cc": 80
@@ -226,7 +226,7 @@ Useful for testing. Production cycles run automatically every 10 minutes.
 
 #### WebSocket
 ```javascript
-const ws = new WebSocket('ws://localhost:8000/ws');
+const ws = new WebSocket('ws://localhost:9000/ws');
 
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
@@ -359,12 +359,12 @@ if __name__ == "__main__":
 
 **Register it:**
 ```bash
-curl -X POST http://localhost:8000/agents/register \
+curl -X POST http://localhost:9000/agents/register \
   -H "Content-Type: application/json" \
   -d '{
     "name": "SimpleBot",
     "role": "citizen",
-    "mcp_endpoint": "http://your-server:8000",
+    "mcp_endpoint": "http://your-server:9000",
     "starting_cc": 80
   }'
 ```
@@ -416,7 +416,7 @@ Key tables:
 ### Manual Cycle Trigger
 
 ```bash
-curl -X POST http://localhost:8000/cycle/trigger
+curl -X POST http://localhost:9000/cycle/trigger
 ```
 
 ### Create Test Task
@@ -486,7 +486,7 @@ ORDER BY id DESC;
 
 Connect WebSocket to stream events in real-time:
 ```javascript
-const ws = new WebSocket('ws://localhost:8000/ws');
+const ws = new WebSocket('ws://localhost:9000/ws');
 ws.onmessage = (e) => console.log(JSON.parse(e.data));
 ```
 
