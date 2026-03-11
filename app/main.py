@@ -376,6 +376,36 @@ async def trigger_cycle(db: Session = Depends(get_db)):
     }
 
 
+@app.post("/cycle/pause")
+async def pause_scheduler():
+    """
+    Pause automatic cycles (manual trigger still works)
+    """
+    scheduler = get_scheduler()
+    success = scheduler.pause()
+    
+    return {
+        "success": success,
+        "message": "Scheduler paused - automatic cycles disabled" if success else "Scheduler not running",
+        "status": scheduler.get_status()
+    }
+
+
+@app.post("/cycle/resume")
+async def resume_scheduler():
+    """
+    Resume automatic cycles
+    """
+    scheduler = get_scheduler()
+    success = scheduler.resume()
+    
+    return {
+        "success": success,
+        "message": "Scheduler resumed - automatic cycles enabled" if success else "Scheduler not running",
+        "status": scheduler.get_status()
+    }
+
+
 async def run_cycle_and_broadcast():
     """Run cycle and broadcast results via WebSocket"""
     from app.core.database import get_db_context

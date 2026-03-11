@@ -314,6 +314,9 @@ class TownState(Base):
     facilities_built = Column(Integer, default=0)
     tasks_completed = Column(Integer, default=0)
     
+    # Scheduler control
+    scheduler_paused = Column(Boolean, nullable=False, default=False)
+    
     # Timestamps
     last_cycle_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
