@@ -132,12 +132,12 @@ python -m app.main
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Server runs at: **http://localhost:8000**
+Server runs at: **http://localhost:8080**
 
 ### 5. Check Status
 
 ```bash
-curl http://localhost:8000/status
+curl http://localhost:8080/status
 ```
 
 Expected output:
@@ -226,7 +226,7 @@ Useful for testing. Production cycles run automatically every 10 minutes.
 
 #### WebSocket
 ```javascript
-const ws = new WebSocket('ws://localhost:8000/ws');
+const ws = new WebSocket('ws://localhost:8080/ws');
 
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
@@ -359,7 +359,7 @@ if __name__ == "__main__":
 
 **Register it:**
 ```bash
-curl -X POST http://localhost:8000/agents/register \
+curl -X POST http://localhost:8080/agents/register \
   -H "Content-Type: application/json" \
   -d '{
     "name": "SimpleBot",
@@ -416,7 +416,7 @@ Key tables:
 ### Manual Cycle Trigger
 
 ```bash
-curl -X POST http://localhost:8000/cycle/trigger
+curl -X POST http://localhost:8080/cycle/trigger
 ```
 
 ### Create Test Task
@@ -486,7 +486,7 @@ ORDER BY id DESC;
 
 Connect WebSocket to stream events in real-time:
 ```javascript
-const ws = new WebSocket('ws://localhost:8000/ws');
+const ws = new WebSocket('ws://localhost:8080/ws');
 ws.onmessage = (e) => console.log(JSON.parse(e.data));
 ```
 
