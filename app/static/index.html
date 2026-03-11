@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgenticTown — Observer Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#0b0d14;--bg2:#11141f;--bg3:#181c2a;--border:#252a3a;
+--gold:#f0c040;--gold2:#c89820;--green:#22c97a;--red:#f05050;
+--amber:#f09030;--purple:#9b72f0;--cyan:#30c8e0;
+--text:#dce4f0;--muted:#5a6480;--dim:#2a3048;
+}
+body{font-family:Georgia,serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#hdr{background:linear-gradient(135deg,#0f1220,#151929);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.bname{font-size:20px;font-weight:700;color:var(--gold);letter-spacing:.06em}
+.bsub{font-size:9px;color:var(--muted);letter-spacing:.15em;margin-top:1px}
+.stats{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.stat{text-align:center}
+.slabel{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.sval{font-size:16px;font-weight:700;color:var(--gold)}
+#runbtn{padding:6px 16px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s}
+#tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;flex-shrink:0;overflow-x:auto}
+.tab{padding:10px 18px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);border:none;border-bottom:2px solid transparent;background:none;white-space:nowrap;transition:all .18s;font-family:Georgia,serif}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+#content{flex:1;overflow:hidden;display:flex}
+.view{display:none;flex:1;overflow:hidden}
+.view.on{display:flex}
+#mapcanvas{flex:1;position:relative;overflow:hidden;background:radial-gradient(ellipse at 40% 50%,#0d1a0d,#0b0d14 70%)}
+.mgrid{position:absolute;inset:0;background-image:linear-gradient(rgba(240,192,64,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(240,192,64,.03) 1px,transparent 1px);background-size:44px 44px;pointer-events:none}
+.terrain{position:absolute;border-radius:50%;background:rgba(20,40,20,.45);pointer-events:none}
+.fpin{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:5}
+.fbox{background:rgba(14,22,14,.88);border:1.5px solid var(--green);border-radius:8px;padding:5px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:56px;backdrop-filter:blur(4px);transition:box-shadow .2s}
+.fbox.wip{border-color:var(--amber)}
+.fbox.sel{box-shadow:0 0 16px var(--green)}
+.fbox.wip.sel{box-shadow:0 0 16px var(--amber)}
+.ficon{font-size:18px}
+.flabel{font-size:8px;text-align:center;line-height:1.2;color:var(--green)}
+.fbox.wip .flabel{color:var(--amber)}
+.fpbar{width:100%;height:3px;background:var(--dim);border-radius:2px;margin-top:2px}
+.fpfill{height:100%;background:var(--amber);border-radius:2px}
+.apin{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:20;transition:left 1.4s cubic-bezier(.4,0,.2,1),top 1.4s cubic-bezier(.4,0,.2,1)}
+.aavatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid;transition:box-shadow .2s}
+.atag{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;white-space:nowrap}
+.legend{position:absolute;bottom:12px;left:12px;background:rgba(11,13,20,.92);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:9px;color:var(--muted);pointer-events:none}
+.ltitle{color:var(--gold);font-weight:700;margin-bottom:4px;font-size:10px}
+#sidepanel{width:265px;background:var(--bg2);border-left:1px solid var(--border);padding:14px;overflow-y:auto;flex-shrink:0}
+.ptitle{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.05em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.pclose{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1}
+.inforow{background:var(--bg3);border-radius:6px;padding:8px 10px;margin-bottom:8px}
+.irlabel{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.irval{font-size:12px}
+.ccbar{height:5px;background:var(--dim);border-radius:3px;margin-top:5px}
+.ccfill{height:100%;border-radius:3px;transition:width .6s}
+.sbadge{display:inline-block;margin-top:6px;padding:2px 10px;border-radius:12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.levt{border-left:2px solid var(--muted);padding-left:8px;margin-bottom:10px}
+.levt-who{font-size:10px;font-weight:600}
+.levt-what{font-size:10px;color:var(--muted);line-height:1.4}
+#agview{padding:20px;overflow-y:auto;flex-wrap:wrap;align-content:flex-start;gap:14px}
+.acard{background:var(--bg2);border-radius:12px;padding:18px;width:calc(33.3% - 10px);min-width:220px;border:1px solid var(--border);transition:border-color .2s}
+.acard:hover{border-color:var(--gold2)}
+.achdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.acavatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid;flex-shrink:0}
+#bldview{padding:20px;overflow-y:auto;flex-direction:column}
+.tiersec{margin-bottom:22px}
+.tierlbl{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.bgrid{display:flex;flex-wrap:wrap;gap:10px}
+.bcard{background:var(--bg2);border-radius:10px;padding:14px;width:230px;border:1px solid var(--border)}
+.bchr{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+#govview{padding:20px;overflow-y:auto;flex-wrap:wrap;align-content:flex-start;gap:20px}
+.govcol{flex:1;min-width:220px}
+.gstitle{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px}
+.ldrcard{background:var(--bg2);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
+.ldravatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid;flex-shrink:0}
+#logview{padding:20px;overflow-y:auto;flex-direction:column;gap:7px}
+.loge{display:flex;align-items:flex-start;gap:10px;background:var(--bg2);border-radius:8px;padding:9px 13px;border-left:3px solid var(--border);animation:sli .3s ease}
+@keyframes sli{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="hdr">
+<div class="brand">
+<span style="font-size:28px">🏘️</span>
+<div>
+<div class="bname">AgenticTown</div>
+<div class="bsub">Multi-Agent Civilization Observatory</div>
+</div>
+</div>
+<div class="stats">
+<div class="stat"><div class="slabel">⏱ Cycle</div><div class="sval" id="scycle">0</div></div>
+<div class="stat"><div class="slabel">🤖 Agents</div><div class="sval" id="sagents">0</div></div>
+<div class="stat"><div class="slabel">🏗 Built</div><div class="sval" id="sbuilt">0/0</div></div>
+<div class="stat"><div class="slabel">🏦 Treasury</div><div class="sval" id="streasury">0 CC</div></div>
+<button id="runbtn" onclick="triggerCycle()" style="background:var(--purple);color:#fff">▶ Run Cycle</button>
+</div>
+</div>
+<div id="tabs">
+<button class="tab on" onclick="switchTab('map',this)">🗺 Town Map</button>
+<button class="tab" onclick="switchTab('ag',this)">🤖 Agents</button>
+<button class="tab" onclick="switchTab('bld',this)">🏗 Facilities</button>
+<button class="tab" onclick="switchTab('log',this)">📜 Event Log</button>
+</div>
+<div id="content">
+<div id="mapview" class="view on">
+<div id="mapcanvas">
+<div class="mgrid"></div>
+<div class="terrain" style="width:110px;height:75px;left:8%;top:18%"></div>
+<div class="terrain" style="width:85px;height:55px;left:62%;top:62%"></div>
+<div class="terrain" style="width:65px;height:45px;left:76%;top:14%"></div>
+<div class="legend">
+<div class="ltitle">LEGEND</div>
+<div>🟢 Built &nbsp;🟡 Funding &nbsp;⚪ Planned</div>
+<div style="margin-top:3px">● Agent — click to inspect</div>
+</div>
+</div>
+<div id="sidepanel">
+<div id="pdefault">
+<div class="ptitle">Live Activity</div>
+<div id="sideevts"></div>
+<div style="font-size:9px;color:var(--muted);margin-top:8px">Click an agent or facility on the map to inspect it.</div>
+</div>
+<div id="pagent" style="display:none"></div>
+<div id="pfacility" style="display:none"></div>
+</div>
+</div>
+<div id="agview" class="view"></div>
+<div id="bldview" class="view"></div>
+<div id="logview" class="view"></div>
+</div>
+<script>
+const API = window.location.origin;
+let state = {agents:[],facilities:[],events:[],cycle:0,treasury:0};
+let selAgent=null, selFacility=null;
+let positions = new Map();
+
+const EMOJI_MAP = {
+  mayor: "👑", sheriff: "⭐", citizen: "🤖", researcher: "🔬", builder: "🔨", archivist: "📚"
+};
+const FACILITY_EMOJI = {
+  "town-square": "🏕️", "notice-board": "📋", "resource-field": "🌾", "lumber-mill": "🪵",
+  "town-hall": "🏛️", "library": "📚", "bank": "🏦", "hospital": "🏥", "school": "🏫"
+};
+const COLOR_MAP = {
+  mayor: "#f0c040", sheriff: "#f05050", citizen: "#30c8e0", researcher: "#9b72f0", builder: "#22c97a", archivist: "#30c8e0"
+};
+
+async function fetchState() {
+  try {
+    const [statusRes, agentsRes, facilitiesRes, eventsRes] = await Promise.all([
+      fetch(`${API}/status`),
+      fetch(`${API}/agents`),
+      fetch(`${API}/facilities`),
+      fetch(`${API}/events?limit=20`)
+    ]);
+    const status = await statusRes.json();
+    const agents = await agentsRes.json();
+    const facilities = await facilitiesRes.json();
+    const events = await eventsRes.json();
+    
+    state.cycle = status.cycle;
+    state.treasury = status.treasury;
+    state.agents = agents.agents || [];
+    state.facilities = facilities.facilities || [];
+    state.events = events.events || [];
+    
+    updateHeader();
+    renderMapPins();
+    renderSideEvts();
+    
+    const av = document.getElementById("agview");
+    if (av.classList.contains("on")) renderAgents();
+    const bv = document.getElementById("bldview");
+    if (bv.classList.contains("on")) renderBuilds();
+    const lv = document.getElementById("logview");
+    if (lv.classList.contains("on")) renderLog();
+  } catch(e) {
+    console.error("Failed to fetch state:", e);
+  }
+}
+
+function updateHeader() {
+  document.getElementById("scycle").textContent = state.cycle;
+  document.getElementById("sagents").textContent = state.agents.filter(a => a.status === 'active').length;
+  const built = state.facilities.filter(f => f.status === 'built').length;
+  document.getElementById("sbuilt").textContent = `${built}/${state.facilities.length}`;
+  document.getElementById("streasury").textContent = Math.round(state.treasury) + " CC";
+}
+
+async function triggerCycle() {
+  const btn = document.getElementById("runbtn");
+  btn.disabled = true;
+  btn.textContent = "⏳ Running...";
+  try {
+    await fetch(`${API}/cycle/trigger`, {method: 'POST'});
+    setTimeout(() => fetchState(), 2000);
+  } catch(e) {
+    console.error("Cycle trigger failed:", e);
+  }
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = "▶ Run Cycle";
+  }, 3000);
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("on"));
+  btn.classList.add("on");
+  document.querySelectorAll(".view").forEach(v => {
+    v.classList.remove("on");
+    v.style.display = "none";
+  });
+  const viewMap = {map: "mapview", ag: "agview", bld: "bldview", log: "logview"};
+  const el = document.getElementById(viewMap[name]);
+  el.style.display = "flex";
+  el.classList.add("on");
+  if (name === "ag") renderAgents();
+  if (name === "bld") renderBuilds();
+  if (name === "log") renderLog();
+}
+
+function renderMapPins() {
+  const canvas = document.getElementById("mapcanvas");
+  canvas.querySelectorAll(".fpin,.apin").forEach(e => e.remove());
+  
+  // Facilities
+  state.facilities.forEach((f, idx) => {
+    if (!positions.has(f.id)) {
+      const angle = (idx / state.facilities.length) * Math.PI * 2;
+      const r = 25 + (f.tier || 1) * 8;
+      positions.set(f.id, {
+        x: 50 + Math.cos(angle) * r,
+        y: 45 + Math.sin(angle) * r
+      });
+    }
+    const pos = positions.get(f.id);
+    const div = document.createElement("div");
+    div.className = "fpin";
+    div.style.left = pos.x + "%";
+    div.style.top = pos.y + "%";
+    const built = f.status === 'built';
+    const funding = f.status === 'funding';
+    const sel = selFacility && selFacility.id === f.id;
+    const emoji = FACILITY_EMOJI[f.id] || "🏗️";
+    const progress = f.cost > 0 ? (f.current_funding / f.cost) * 100 : 0;
+    div.innerHTML = `<div class="fbox ${built ? "" : "wip"} ${sel ? "sel" : ""}">
+      <span class="ficon">${emoji}</span>
+      <span class="flabel">${f.name}</span>
+      ${!built ? `<div class="fpbar"><div class="fpfill" style="width:${Math.min(progress, 100)}%"></div></div>` : ""}
+    </div>`;
+    div.onclick = () => {
+      selFacility = f;
+      selAgent = null;
+      renderMapPins();
+      showFacPanel(f);
+    };
+    canvas.appendChild(div);
+  });
+  
+  // Agents
+  state.agents.forEach((a, idx) => {
+    if (!positions.has(a.id)) {
+      const angle = (idx / state.agents.length) * Math.PI * 2 + Math.PI / 4;
+      const r = 15 + Math.random() * 10;
+      positions.set(a.id, {
+        x: 50 + Math.cos(angle) * r + (Math.random() - 0.5) * 8,
+        y: 45 + Math.sin(angle) * r + (Math.random() - 0.5) * 8
+      });
+    }
+    let pos = positions.get(a.id);
+    // Gentle drift
+    pos = {
+      x: Math.max(10, Math.min(90, pos.x + (Math.random() - 0.5) * 0.5)),
+      y: Math.max(10, Math.min(85, pos.y + (Math.random() - 0.5) * 0.5))
+    };
+    positions.set(a.id, pos);
+    
+    const sel = selAgent && selAgent.id === a.id;
+    const emoji = EMOJI_MAP[a.role] || "🤖";
+    const color = COLOR_MAP[a.role] || "#30c8e0";
+    const div = document.createElement("div");
+    div.className = "apin";
+    div.style.left = pos.x + "%";
+    div.style.top = pos.y + "%";
+    div.innerHTML = `
+      <div class="atag" style="color:${color}">${a.name}</div>
+      <div class="aavatar" style="background:${color}22;border-color:${color};box-shadow:${sel ? `0 0 14px ${color}` : `0 0 5px ${color}55`}">
+        ${emoji}
+      </div>`;
+    div.onclick = () => {
+      selAgent = a;
+      selFacility = null;
+      renderMapPins();
+      showAgPanel(a);
+    };
+    canvas.appendChild(div);
+  });
+}
+
+function showAgPanel(a) {
+  document.getElementById("pdefault").style.display = "none";
+  document.getElementById("pfacility").style.display = "none";
+  const emoji = EMOJI_MAP[a.role] || "🤖";
+  const color = COLOR_MAP[a.role] || "#30c8e0";
+  const sc = a.status === 'active' ? '#22c97a' : '#5a6480';
+  document.getElementById("pagent").style.display = "block";
+  document.getElementById("pagent").innerHTML = `
+    <div class="ptitle"><span>Agent Profile</span><button class="pclose" onclick="closePanel()">×</button></div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:42px">${emoji}</div>
+      <div style="font-size:16px;font-weight:700;color:${color};margin-top:4px">${a.name}</div>
+      <div style="font-size:11px;color:var(--muted)">${a.role}</div>
+      <span class="sbadge" style="background:${sc}22;color:${sc}">${a.status.toUpperCase()}</span>
+    </div>
+    <div class="inforow">
+      <div class="irlabel">Civic Credits</div>
+      <div class="irval" style="color:var(--gold);font-weight:700">${Math.round(a.cc_balance)} CC</div>
+      <div class="ccbar"><div class="ccfill" style="width:${Math.min((a.cc_balance / 250) * 100, 100)}%;background:${color}"></div></div>
+    </div>
+    <div class="inforow">
+      <div class="irlabel">Tasks Completed</div>
+      <div class="irval">${a.tasks_completed || 0}</div>
+    </div>`;
+}
+
+function showFacPanel(f) {
+  document.getElementById("pdefault").style.display = "none";
+  document.getElementById("pagent").style.display = "none";
+  const fc = f.status === 'built' ? "#22c97a" : f.status === 'funding' ? "#f09030" : "#5a6480";
+  const status = f.status === 'built' ? "BUILT" : f.status === 'funding' ? "FUNDING" : "PLANNED";
+  const emoji = FACILITY_EMOJI[f.id] || "🏗️";
+  const progress = f.cost > 0 ? (f.current_funding / f.cost) * 100 : 0;
+  document.getElementById("pfacility").style.display = "block";
+  document.getElementById("pfacility").innerHTML = `
+    <div class="ptitle"><span>Facility</span><button class="pclose" onclick="closePanel()">×</button></div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:40px">${emoji}</div>
+      <div style="font-size:15px;font-weight:700;color:${fc};margin-top:4px">${f.name}</div>
+      <div style="font-size:10px;color:var(--muted)">Tier ${f.tier || 1} · ${Math.round(f.cost)} CC</div>
+      <span class="sbadge" style="background:${fc}22;color:${fc}">${status}</span>
+    </div>
+    ${f.status !== 'built' ? `<div class="inforow">
+      <div class="irlabel">Fund Progress</div>
+      <div class="ccbar" style="height:8px;margin-top:6px"><div class="ccfill" style="width:${Math.min(progress, 100)}%;background:var(--amber)"></div></div>
+      <div style="font-size:10px;color:var(--amber);margin-top:3px">${Math.round(f.current_funding)} / ${Math.round(f.cost)} CC</div>
+    </div>` : ""}`;
+}
+
+function closePanel() {
+  selAgent = null;
+  selFacility = null;
+  renderMapPins();
+  document.getElementById("pdefault").style.display = "block";
+  document.getElementById("pagent").style.display = "none";
+  document.getElementById("pfacility").style.display = "none";
+  renderSideEvts();
+}
+
+function renderSideEvts() {
+  const ecolor = t => ({
+    agent_joined: "#22c97a", task_claimed: "#9b72f0", task_completed: "#22c97a",
+    contribution: "#f09030", facility_complete: "#f0c040", agent_error: "#f05050"
+  }[t] || "#5a6480");
+  
+  document.getElementById("sideevts").innerHTML = state.events.slice(0, 7).map(e => {
+    const agent = state.agents.find(a => a.id === e.agent_id);
+    const emoji = agent ? (EMOJI_MAP[agent.role] || "🤖") : "📌";
+    return `<div class="levt" style="border-left-color:${ecolor(e.type)}">
+      <div class="levt-who" style="color:var(--text)">${emoji} ${e.summary}</div>
+      <div class="levt-what">${new Date(e.created_at).toLocaleTimeString()}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderAgents() {
+  document.getElementById("agview").innerHTML =
+    `<h2 style="font-size:16px;color:var(--gold);width:100%;margin-bottom:4px">Agent Registry</h2>
+    <p style="font-size:12px;color:var(--muted);width:100%;margin-bottom:16px">All agents currently active in AgenticTown</p>` +
+    state.agents.map(a => {
+      const emoji = EMOJI_MAP[a.role] || "🤖";
+      const color = COLOR_MAP[a.role] || "#30c8e0";
+      const sc = a.status === 'active' ? '#22c97a' : '#5a6480';
+      return `<div class="acard" style="border-color:${color}33">
+        <div class="achdr">
+          <div class="acavatar" style="background:${color}22;border-color:${color}">${emoji}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:14px;color:${color}">${a.name}</div>
+            <div style="font-size:10px;color:var(--muted)">${a.role}</div>
+          </div>
+          <span class="sbadge" style="background:${sc}22;color:${sc};margin-top:0">${a.status.toUpperCase()}</span>
+        </div>
+        <div style="margin-bottom:9px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Civic Credits</span>
+            <span style="font-size:11px;color:var(--gold);font-weight:700">${Math.round(a.cc_balance)} CC</span>
+          </div>
+          <div class="ccbar"><div class="ccfill" style="width:${Math.min((a.cc_balance / 250) * 100, 100)}%;background:linear-gradient(90deg,${color},${color}88)"></div></div>
+        </div>
+        <div style="font-size:10px;color:#8090a8">Tasks: ${a.tasks_completed || 0}</div>
+      </div>`;
+    }).join("");
+}
+
+function renderBuilds() {
+  const tiers = [
+    {n: 1, lbl: "TIER 1 — FOUNDATIONS"},
+    {n: 2, lbl: "TIER 2 — INSTITUTIONS"},
+    {n: 3, lbl: "TIER 3 — CIVILIZATION"}
+  ];
+  document.getElementById("bldview").innerHTML =
+    `<h2 style="font-size:16px;color:var(--gold);margin-bottom:16px">Facility Registry</h2>` +
+    tiers.map(t => {
+      const tf = state.facilities.filter(f => (f.tier || 1) === t.n);
+      if (!tf.length) return "";
+      return `<div class="tiersec">
+        <div class="tierlbl">${t.lbl}</div>
+        <div class="bgrid">${tf.map(f => {
+          const fc = f.status === 'built' ? "#22c97a" : f.status === 'funding' ? "#f09030" : "#5a6480";
+          const st = f.status === 'built' ? "BUILT" : f.status === 'funding' ? "FUNDING" : "PLANNED";
+          const emoji = FACILITY_EMOJI[f.id] || "🏗️";
+          const progress = f.cost > 0 ? (f.current_funding / f.cost) * 100 : 0;
+          return `<div class="bcard" style="border-color:${fc}33">
+            <div class="bchr">
+              <span style="font-size:26px">${emoji}</span>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:13px;color:${fc}">${f.name}</div>
+                <div style="font-size:10px;color:var(--muted)">${Math.round(f.cost)} CC</div>
+              </div>
+              <span style="padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:${fc}22;color:${fc}">${st}</span>
+            </div>
+            ${f.status !== 'built' ? `<div style="margin-bottom:8px">
+              <div class="fpbar" style="height:5px;border-radius:3px"><div class="fpfill" style="width:${Math.min(progress, 100)}%"></div></div>
+              <div style="font-size:9px;color:var(--amber);margin-top:2px">${Math.round(f.current_funding)}/${Math.round(f.cost)} CC funded</div>
+            </div>` : ""}
+          </div>`;
+        }).join("")}</div>
+      </div>`;
+    }).join("");
+}
+
+function renderLog() {
+  const ecolor = t => ({
+    agent_joined: "#22c97a", task_claimed: "#9b72f0", task_completed: "#22c97a",
+    contribution: "#f09030", facility_complete: "#f0c040", agent_error: "#f05050"
+  }[t] || "#5a6480");
+  
+  document.getElementById("logview").innerHTML =
+    `<h2 style="font-size:16px;color:var(--gold);margin-bottom:4px">Event Log</h2>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:14px">Real-time stream of all agent actions</p>` +
+    state.events.map(e => {
+      const agent = state.agents.find(a => a.id === e.agent_id);
+      const emoji = agent ? (EMOJI_MAP[agent.role] || "🤖") : "📌";
+      const time = new Date(e.created_at).toLocaleTimeString();
+      return `<div class="loge" style="border-left-color:${ecolor(e.type)}">
+        <span style="font-size:17px;flex-shrink:0">${emoji}</span>
+        <div style="flex:1">
+          <div style="font-size:11px"><span style="font-weight:700">${e.summary}</span></div>
+        </div>
+        <span style="font-size:9px;color:#384060;flex-shrink:0">${time}</span>
+      </div>`;
+    }).join("");
+}
+
+// Init
+fetchState();
+setInterval(fetchState, 5000);
+setInterval(() => {
+  if (document.getElementById("mapview").classList.contains("on")) {
+    renderMapPins();
+  }
+}, 2000);
+</script>
+</body>
+</html>

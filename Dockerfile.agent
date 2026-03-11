@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install FastAPI and uvicorn
+RUN pip install --no-cache-dir fastapi uvicorn[standard]
+
+# Copy example agent
+COPY examples/simple_agent.py .
+
+# Expose port
+EXPOSE 8080
+
+# Run agent MCP server
+CMD ["python", "simple_agent.py"]
